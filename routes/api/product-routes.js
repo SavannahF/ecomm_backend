@@ -3,18 +3,67 @@ const { Product, Category, Tag, ProductTag } = require('../../models');
 
 // The `/api/products` endpoint
 
-// get all products
+
+// GET all products
 router.get('/', (req, res) => {
   // find all products
+  Product.findAll(
   // be sure to include its associated Category and Tag data
+    {
+      include: [
+        {
+        model: Category,
+        attributes: ["id", "category_name"],
+      },
+      {
+        model: Tag,
+        attributes: ["id", "tag_name"],
+      }
+    ]
+    })
+      .then((productData) => {
+        res.json(productData);
+      })
+      .catch((err) => {
+        res.json(err);
+        console.log(err);
+    })
 });
 
-// get one product
+// GET one product
 router.get('/:id', (req, res) => {
   // find a single product by its `id`
+  Product.findOne(
   // be sure to include its associated Category and Tag data
+    {
+      where: {
+        id: req.params.id
+      },
+      include: [
+        {
+          model: Category,
+          attributes: ["id", "category_name"],
+        },
+        {
+          model: Tag,
+          attributes: ["id", "tag_name"],
+        },
+      ]
+    })
+    .then((productData) => {
+      if(!productData) {
+        res.status(404).json({message: 'No product found with that id.'});
+        return;
+      }
+      res.json(productData);
+    })
+    .catch((err) => {
+      res.json(err);
+      console.log(err);
+    })
 });
 
+// POST
 // create new product
 router.post('/', (req, res) => {
   /* req.body should look like this...
@@ -47,6 +96,7 @@ router.post('/', (req, res) => {
     });
 });
 
+// PUT
 // update product
 router.put('/:id', (req, res) => {
   // update product data
@@ -89,8 +139,27 @@ router.put('/:id', (req, res) => {
     });
 });
 
+// DELETE
 router.delete('/:id', (req, res) => {
   // delete one product by its `id` value
+  Product.destroy(
+    {
+      where: {
+      id: req.params.id,
+      }, 
+    }
+  )
+  .then((deletedProduct) => {
+    if(!deletedProduct) {
+      res.status(404).json({message: 'No product found with that ID.'});
+      return;
+    }
+    res.json(deletedProduct);
+  })
+  .catch((err) => {
+    res.json(err);
+    console.log(err);
+  });
 });
 
 module.exports = router;
